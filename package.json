@@ -21,10 +21,24 @@
     "test": "mocha"
   },
   "dependencies": {
+    "extend-shallow": "^2.0.1",
+    "lazy-cache": "^0.2.4",
     "parser-front-matter": "^1.3.0"
   },
   "devDependencies": {
+    "assemble-core": "^0.3.0",
+    "engine-base": "^0.1.2",
     "mocha": "*"
   },
-  "keywords": []
+  "verb": {
+    "related": {
+      "list": [
+        "base-methods",
+        "assemble-core",
+        "update",
+        "generate",
+        "verb"
+      ]
+    }
+  }
 }
