@@ -24,7 +24,8 @@ require = utils;
  * Lazily required module dependencies
  */
 
-require('parser-front-matter');
+require('extend-shallow', 'extend');
+require('parser-front-matter', 'matter');
 
 /**
  * Restore `require`
