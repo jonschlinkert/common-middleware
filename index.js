@@ -15,8 +15,11 @@ module.exports = function(options) {
       throw new TypeError('common-middleware expects the base-routes plugin to be registered');
     }
 
-    if (typeof this.preWrite !== 'function') {
+    // we'll assume none of them exist if `onStream` is not registered
+    if (typeof this.onStream !== 'function') {
+      this.handler('onStream');
       this.handler('preWrite');
+      this.handler('postWrite');
     }
 
     var opts = utils.extend({}, app.options, options);
