@@ -11,6 +11,10 @@ var utils = require('./utils');
 
 module.exports = function(options) {
   return function plugin(app) {
+    if (typeof app.handler !== 'function') {
+      throw new TypeError('common-middleware expects the base-routes plugin to be registered');
+    }
+
     if (typeof this.preWrite !== 'function') {
       this.handler('preWrite');
     }
