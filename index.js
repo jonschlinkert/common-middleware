@@ -41,12 +41,12 @@ module.exports = function(options) {
      */
 
     app.onLoad(extRegex, function(file, next) {
-      file.content = file.content.replace(/([{<])%%=/, '__ESC_$1DELIM__');
+      file.content = file.content.replace(/([{<])%%=/g, '__ESC_$1DELIM__');
       next();
     });
 
     app.postRender(extRegex, function(file, next) {
-      file.content = file.content.replace(/__ESC_(.)DELIM__/, '$1%=');
+      file.content = file.content.replace(/__ESC_(.)DELIM__/g, '$1%=');
       next();
     });
 
