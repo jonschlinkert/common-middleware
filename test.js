@@ -10,7 +10,7 @@ describe('middleware', function () {
   beforeEach(function () {
     app = assemble();
     app.use(middleware({
-      extRegex: /\.(md|tmpl|foo)$/
+      escapeRegex: /\.(md|tmpl|foo)$/
     }));
 
     app.engine(['tmpl', 'foo'], require('engine-base'));

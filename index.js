@@ -24,7 +24,8 @@ module.exports = function(options) {
 
     var opts = utils.extend({}, app.options, options);
     var jsonRegex = opts.jsonRegex || /\.(json|jshintrc)$/;
-    var extRegex = opts.extRegex || /\.(md|tmpl)$/;
+    var extRegex = opts.extRegex || /\.(md|tmpl|hbs|jade)$/;
+    var escapeRegex = opts.escapeRegex || /\.(md|tmpl|hbs|jade|jsx|js)$/;
 
     /**
      * Parse front-matter. Adds the data object to `file.data`,
@@ -40,12 +41,12 @@ module.exports = function(options) {
      * `<%%= foo %>` syntax
      */
 
-    app.onLoad(extRegex, function(file, next) {
+    app.onLoad(escapeRegex, function(file, next) {
       file.content = file.content.replace(/([{<])%%=/g, '__ESC_$1DELIM__');
       next();
     });
 
-    app.postRender(extRegex, function(file, next) {
+    app.postRender(escapeRegex, function(file, next) {
       file.content = file.content.replace(/__ESC_(.)DELIM__/g, '$1%=');
       next();
     });
