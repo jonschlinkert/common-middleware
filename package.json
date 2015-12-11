@@ -41,6 +41,9 @@
     "yaml"
   ],
   "verb": {
+    "plugins": [
+      "gulp-format-md"
+    ],
     "related": {
       "list": [
         "base-methods",
