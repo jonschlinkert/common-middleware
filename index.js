@@ -10,9 +10,15 @@
 var utils = require('./utils');
 
 module.exports = function(options) {
-  return function plugin(app) {
-    if (typeof app.handler !== 'function') {
-      throw new TypeError('common-middleware expects the base-routes plugin to be registered');
+  return function plugin() {
+    if (this.isView || this.isItem) {
+      return;
+    }
+
+    this.emit('plugin', 'common-middleware', this);
+
+    if (typeof this.handler !== 'function') {
+      return;
     }
 
     // we'll assume none of them exist if `onStream` is not registered
@@ -22,7 +28,7 @@ module.exports = function(options) {
       this.handler('postWrite');
     }
 
-    var opts = utils.extend({}, app.options, options);
+    var opts = utils.extend({}, this.options, options);
     var jsonRegex = opts.jsonRegex || /\.(json|jshintrc)$/;
     var extRegex = opts.extRegex || /\.(md|tmpl|hbs|jade)$/;
     var escapeRegex = opts.escapeRegex || /\.(md|tmpl|hbs|jade|jsx|js)$/;
@@ -32,7 +38,7 @@ module.exports = function(options) {
      * which is passed to templates as context at render time.
      */
 
-    app.onLoad(extRegex, function(file, next) {
+    this.onLoad(extRegex, function(file, next) {
       utils.matter.parse(file, next);
     });
 
@@ -41,12 +47,12 @@ module.exports = function(options) {
      * `<%%= foo %>` syntax
      */
 
-    app.onLoad(escapeRegex, function(file, next) {
+    this.onLoad(escapeRegex, function(file, next) {
       file.content = file.content.replace(/([{<])%%=/g, '__ESC_$1DELIM__');
       next();
     });
 
-    app.postRender(escapeRegex, function(file, next) {
+    this.postRender(escapeRegex, function(file, next) {
       file.content = file.content.replace(/__ESC_(.)DELIM__/g, '$1%=');
       next();
     });
@@ -56,7 +62,7 @@ module.exports = function(options) {
      * updating json files.
      */
 
-    app.onLoad(jsonRegex, function(file, next) {
+    this.onLoad(jsonRegex, function(file, next) {
       file.json = JSON.parse(file.content);
       next();
     });
@@ -66,7 +72,7 @@ module.exports = function(options) {
      * before writing the file back to the file system.
      */
 
-    app.preWrite(jsonRegex, function(file, next) {
+    this.preWrite(jsonRegex, function(file, next) {
       file.content = JSON.stringify(file.json, null, 2);
       next();
     });
@@ -76,7 +82,7 @@ module.exports = function(options) {
      * collection or view
      */
 
-    if (app.isApp) {
+    if (!this.isViews && !this.isCollection) {
       return plugin;
     }
   };
