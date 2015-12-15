@@ -24,7 +24,7 @@ require = utils;
  * Lazily required module dependencies
  */
 
-require('extend-shallow', 'extend');
+require('mixin-deep', 'merge');
 require('parser-front-matter', 'matter');
 
 /**
