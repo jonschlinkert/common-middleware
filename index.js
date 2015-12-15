@@ -10,16 +10,14 @@
 var utils = require('./utils');
 
 module.exports = function(options) {
-  return function plugin() {
-    if (this.isView || this.isItem) {
-      return;
-    }
+  options = options || {};
+
+  return function plugin(app) {
+    if (this.isView || this.isItem) return;
+    if (this.option('common-middleware') === false) return;
+    if (typeof this.handler !== 'function') return;
 
     this.emit('plugin', 'common-middleware', this);
-
-    if (typeof this.handler !== 'function') {
-      return;
-    }
 
     // we'll assume none of them exist if `onStream` is not registered
     if (typeof this.onStream !== 'function') {
@@ -28,7 +26,7 @@ module.exports = function(options) {
       this.handler('postWrite');
     }
 
-    var opts = utils.extend({}, this.options, options);
+    var opts = utils.merge({}, this.options, options);
     var jsonRegex = opts.jsonRegex || /\.(json|jshintrc)$/;
     var extRegex = opts.extRegex || /\.(md|tmpl|hbs|jade)$/;
     var escapeRegex = opts.escapeRegex || /\.(md|tmpl|hbs|jade|jsx|js)$/;
@@ -63,7 +61,27 @@ module.exports = function(options) {
      */
 
     this.onLoad(jsonRegex, function(file, next) {
-      file.json = JSON.parse(file.content);
+      var json;
+
+      Object.defineProperty(file, 'json', {
+        configurable: true,
+        enumerable: true,
+        set: function(val) {
+          json = val;
+          console.log(json)
+        },
+        get: function() {
+          if (!json) json = JSON.parse(file.content);
+          if (opts.configName && json.hasOwnProperty(opts.configName)) {
+            var config = json[opts.configName];
+            if (config && config.data) {
+              app.cache.data = utils.merge({}, app.cache.data, config.data);
+            }
+          }
+          return json;
+        }
+      });
+
       next();
     });
 
@@ -73,17 +91,10 @@ module.exports = function(options) {
      */
 
     this.preWrite(jsonRegex, function(file, next) {
-      file.content = JSON.stringify(file.json, null, 2);
+      file.content = JSON.stringify(file.json, null, 2) + '\n';
       next();
     });
 
-    /**
-     * Return the plugin function if the instance is not a
-     * collection or view
-     */
-
-    if (!this.isViews && !this.isCollection) {
-      return plugin;
-    }
+    return plugin;
   };
 };
