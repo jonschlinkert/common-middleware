@@ -66,6 +66,17 @@ describe('middleware', function() {
     '}\n');
   });
 
+  it('should not update json when contents is changed', function() {
+    var page = app.page('name.json', {
+      content: '{"name": "Halle Schlinkert"}'
+    });
+    assert.equal(page.json.name, 'Halle Schlinkert');
+    page.json.name = 'Brooke Schlinkert';
+    page.content = page.content.split('Halle Schlinkert').join('---');
+    app.handle('preWrite', page);
+    assert.equal(page.content, '{"name": "---"}');
+  });
+
   it('should update json file content on preWrite:', function() {
     var page = app.page('name.json', {
       content: '{"name": "Brooke Schlinkert"}'

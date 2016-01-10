@@ -61,6 +61,7 @@ module.exports = function(options) {
      */
 
     this.onLoad(jsonRegex, function(file, next) {
+      utils.define(file, 'originalContent', file.content);
       var json;
 
       Object.defineProperty(file, 'json', {
@@ -91,6 +92,10 @@ module.exports = function(options) {
      */
 
     this.preWrite(jsonRegex, function(file, next) {
+      if (file.content !== file.originalContent) {
+        return next();
+      }
+
       file.content = JSON.stringify(file.json, null, 2) + '\n';
       next();
     });
