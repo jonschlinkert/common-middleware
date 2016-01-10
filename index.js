@@ -69,7 +69,6 @@ module.exports = function(options) {
         enumerable: true,
         set: function(val) {
           json = val;
-          console.log(json)
         },
         get: function() {
           if (!json) json = JSON.parse(file.content);
