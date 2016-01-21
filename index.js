@@ -46,11 +46,13 @@ module.exports = function(options) {
      */
 
     this.onLoad(escapeRegex, function(file, next) {
+      file.content = file.content.split('{%% body %}').join('__BODY_TAG__');
       file.content = file.content.replace(/([{<])%%=/g, '__ESC_$1DELIM__');
       next();
     });
 
     this.postRender(escapeRegex, function(file, next) {
+      file.content = file.content.split('__BODY_TAG__').join('{% body %}');
       file.content = file.content.replace(/__ESC_(.)DELIM__/g, '$1%=');
       next();
     });
