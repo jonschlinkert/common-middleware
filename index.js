@@ -28,12 +28,16 @@ module.exports = function(options) {
 
     var opts = utils.merge({}, this.options, options);
     var jsonRegex = opts.jsonRegex || /\.(json|jshintrc)$/;
-    var extRegex = opts.extRegex || /\.(md|tmpl|hbs|jade)$/;
-    var escapeRegex = opts.escapeRegex || /\.(md|tmpl|hbs|jade|jsx|js)$/;
+    var extRegex = opts.extRegex || /./;
+    var escapeRegex = opts.escapeRegex || /./;
 
     /**
-     * Parse front-matter. Adds the data object to `file.data`,
-     * which is passed to templates as context at render time.
+     * Parses front-matter on files that match `options.extRegex` and
+     * adds the resulting data object to `file.data`. This object is
+     * passed as context to the template engine at render time.
+     *
+     * @name front matter
+     * @api public
      */
 
     this.onLoad(extRegex, function(file, next) {
@@ -41,8 +45,12 @@ module.exports = function(options) {
     });
 
     /**
-     * Uses C-style-ish macros to escape templates with `{%%= foo %}` or
-     * `<%%= foo %>` syntax
+     * Uses C-style macros to escape templates with `{%%= foo %}` or
+     * `<%%= foo %>` syntax, so they will not be evaluated by a template
+     * engine when `.render` is called.
+     *
+     * @name escape templates
+     * @api public
      */
 
     this.onLoad(escapeRegex, function(file, next) {
@@ -58,8 +66,13 @@ module.exports = function(options) {
     });
 
     /**
-     * Add a `json` property to the file object as a convenience for
-     * updating json files.
+     * Adds a `json` property to the `file` object when the file extension
+     * matches `options.jsonRegex`. This allows JSON files to be updated
+     * by other middleware or pipeline plugins without having to parse and
+     * stringify with each modification.
+     *
+     * @name JSON on-load
+     * @api public
      */
 
     this.onLoad(jsonRegex, function(file, next) {
@@ -88,8 +101,11 @@ module.exports = function(options) {
     });
 
     /**
-     * Update the `file.content` property with stringified JSON
+     * Updates the `file.content` property with stringified JSON
      * before writing the file back to the file system.
+     *
+     * @name JSON pre-write
+     * @api public
      */
 
     this.preWrite(jsonRegex, function(file, next) {
