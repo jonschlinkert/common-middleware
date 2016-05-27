@@ -65,9 +65,6 @@ module.exports = function(options) {
       var str = file.contents.toString();
       str = str.split('__BODY_TAG__').join('{% body %}');
       str = str.replace(/__ESC_(.)DELIM__/g, '$1%=');
-
-      // fix escaped code comments (used as macros)
-      str = str.split('<!!--').join('<!--');
       file.contents = new Buffer(str);
       next();
     });
@@ -76,9 +73,6 @@ module.exports = function(options) {
       var str = file.contents.toString();
       str = str.split('__BODY_TAG__').join('{% body %}');
       str = str.replace(/__ESC_(.)DELIM__/g, '$1%=');
-
-      // fix escaped code comments (used as macros)
-      str = str.split('<!!--').join('<!--');
       file.contents = new Buffer(str);
       next();
     });
