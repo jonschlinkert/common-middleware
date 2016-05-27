@@ -20,22 +20,44 @@ describe('middleware', function() {
 
     app.create('pages');
     app.page('one.md', {
-      content: 'a {%= name %} b {%%= foo %} c'
+      content: 'a {%= name %} b __ESC_{DELIM__ foo %} c'
     });
     app.page('yfm.md', {
       content: '---\ntitle: YFM\n---\n{%= title %}'
     });
     app.page('two.tmpl', {
-      content: 'a <%= name %> b <%%= foo %> c'
+      content: 'a <%= name %> b __ESC_<DELIM__ foo %> c'
     });
     app.page('three.foo', {
-      content: 'a <%= name %> b <%%= foo %> c'
+      content: 'a <%= name %> b __ESC_<DELIM__ foo %> c'
+    });
+  });
+
+  it('should unescape comment macros postRender', function(cb) {
+    var page = app.page('readme.md', {
+      content: 'foo <!!-- bar -->'
+    });
+    app.handle('postRender', page, function(err, res) {
+      if (err) return cb(err);
+      assert.equal(res.content, 'foo <!-- bar -->');
+      cb();
+    });
+  });
+
+  it('should unescape comment macros preWrite', function(cb) {
+    var page = app.page('readme.md', {
+      content: 'foo <!!-- bar -->'
+    });
+    app.handle('preWrite', page, function(err, res) {
+      if (err) return cb(err);
+      assert.equal(res.content, 'foo <!-- bar -->');
+      cb();
     });
   });
 
   it('should register onLoad middleware:', function() {
     var page = app.pages.getView('one.md');
-    assert(page.options.handled[0] === 'onLoad');
+    assert.equal(page.options.handled[0], 'onLoad');
   });
 
   it('should parse front-matter:', function() {
@@ -141,16 +163,16 @@ describe('json config', function() {
 
     app.create('pages');
     app.page('one.md', {
-      content: 'a {%= name %} b {%%= foo %} c'
+      content: 'a {%= name %} b __ESC_{DELIM__ foo %} c'
     });
     app.page('yfm.md', {
       content: '---\ntitle: YFM\n---\n{%= title %}'
     });
     app.page('two.tmpl', {
-      content: 'a <%= name %> b <%%= foo %> c'
+      content: 'a <%= name %> b __ESC_<DELIM__ foo %> c'
     });
     app.page('three.foo', {
-      content: 'a <%= name %> b <%%= foo %> c'
+      content: 'a <%= name %> b __ESC_<DELIM__ foo %> c'
     });
   });
 
@@ -164,64 +186,5 @@ describe('json config', function() {
 
     assert(page.json.fake);
     assert.equal(typeof page.json.fake, 'object');
-  });
-
-  it('should update app.data with file.json.data', function() {
-    var pkg = require('./package.json');
-    pkg.fake = {};
-    pkg.fake.data = {foo: 'bar'};
-
-    var page = app.page('package.json', {
-      content: JSON.stringify(pkg)
-    });
-
-    assert(app.cache.data.foo === undefined);
-
-    assert(page.json);
-    assert(app.cache.data.foo === 'bar');
-
-    page.json.fake.data.bar = 'baz';
-
-    assert(page.json);
-    assert(app.cache.data.bar === 'baz');
-  });
-
-  it('should update app.cache.data on preRender', function(cb) {
-    var pkg = require('./package.json');
-    pkg.fake = {};
-    pkg.fake.data = {};
-
-    assert(app.cache.data.foo === undefined);
-
-    app.onLoad(/./, function(view, next) {
-      view.json.fake.data.foo = 'bar';
-      view.json.fake.data.bar = 'baz';
-      assert(app.cache.data.foo === undefined);
-      assert(app.cache.data.bar === undefined);
-      next();
-    });
-
-    var page = app.page('package.json', {
-      content: JSON.stringify(pkg)
-    });
-
-    app.preRender(/./, function(view, next) {
-      assert(app.cache.data.foo === 'bar');
-      assert(app.cache.data.bar === 'baz');
-      next();
-    });
-
-    app.postRender(/./, function(view, next) {
-      assert(app.cache.data.foo === 'bar');
-      assert(app.cache.data.bar === 'baz');
-      next();
-    });
-
-    app.render('package.json', function(err, res) {
-      if (err) return cb(err);
-      assert(app.cache.data.foo === 'bar');
-      assert(app.cache.data.bar === 'baz');
-      cb();
-    });
   });
 });

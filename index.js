@@ -54,14 +54,32 @@ module.exports = function(options) {
      */
 
     this.onLoad(escapeRegex, function(file, next) {
-      file.content = file.content.split('{%% body %}').join('__BODY_TAG__');
-      file.content = file.content.replace(/([{<])%%=/g, '__ESC_$1DELIM__');
+      var str = file.contents.toString();
+      str = str.split('__BODY_TAG__').join('{% body %}');
+      str = str.replace(/([{<])%%=/g, '__ESC_$1DELIM__');
+      file.contents = new Buffer(str);
       next();
     });
 
     this.postRender(escapeRegex, function(file, next) {
-      file.content = file.content.split('__BODY_TAG__').join('{% body %}');
-      file.content = file.content.replace(/__ESC_(.)DELIM__/g, '$1%=');
+      var str = file.contents.toString();
+      str = str.split('__BODY_TAG__').join('{% body %}');
+      str = str.replace(/__ESC_(.)DELIM__/g, '$1%=');
+
+      // fix escaped code comments (used as macros)
+      str = str.split('<!!--').join('<!--');
+      file.contents = new Buffer(str);
+      next();
+    });
+
+    this.preWrite(escapeRegex, function(file, next) {
+      var str = file.contents.toString();
+      str = str.split('__BODY_TAG__').join('{% body %}');
+      str = str.replace(/__ESC_(.)DELIM__/g, '$1%=');
+
+      // fix escaped code comments (used as macros)
+      str = str.split('<!!--').join('<!--');
+      file.contents = new Buffer(str);
       next();
     });
 
@@ -86,14 +104,7 @@ module.exports = function(options) {
           json = val;
         },
         get: function() {
-          if (!json) json = JSON.parse(file.content);
-          if (opts.configName && json.hasOwnProperty(opts.configName)) {
-            var config = json[opts.configName];
-            if (config && config.data) {
-              app.cache.data = utils.merge({}, app.cache.data, config.data);
-            }
-          }
-          return json;
+          return json || (json = JSON.parse(file.content));
         }
       });
 
@@ -101,19 +112,21 @@ module.exports = function(options) {
     });
 
     /**
-     * Updates the `file.content` property with stringified JSON
-     * before writing the file back to the file system.
+     * If `file.contents` has not already been updated directly, the `file.contents` property
+     * is updated with stringified JSON before writing the file back to the file
+     * system.
      *
      * @name JSON pre-write
      * @api public
      */
 
     this.preWrite(jsonRegex, function(file, next) {
-      if (file.content !== file.originalContent) {
-        return next();
+      if (file.contents.toString() !== file.originalContent) {
+        next();
+        return;
       }
 
-      file.content = JSON.stringify(file.json, null, 2) + '\n';
+      file.contents = new Buffer(JSON.stringify(file.json, null, 2) + '\n');
       next();
     });
 
