@@ -33,28 +33,6 @@ describe('middleware', function() {
     });
   });
 
-  it('should unescape comment macros postRender', function(cb) {
-    var page = app.page('readme.md', {
-      content: 'foo <!!-- bar -->'
-    });
-    app.handle('postRender', page, function(err, res) {
-      if (err) return cb(err);
-      assert.equal(res.content, 'foo <!-- bar -->');
-      cb();
-    });
-  });
-
-  it('should unescape comment macros preWrite', function(cb) {
-    var page = app.page('readme.md', {
-      content: 'foo <!!-- bar -->'
-    });
-    app.handle('preWrite', page, function(err, res) {
-      if (err) return cb(err);
-      assert.equal(res.content, 'foo <!-- bar -->');
-      cb();
-    });
-  });
-
   it('should register onLoad middleware:', function() {
     var page = app.pages.getView('one.md');
     assert.equal(page.options.handled[0], 'onLoad');

@@ -7,17 +7,14 @@
 
 'use strict';
 
+var debug = require('debug')('common-middleware');
 var utils = require('./utils');
 
 module.exports = function(options) {
   options = options || {};
 
   return function plugin(app) {
-    if (this.isView || this.isItem) return;
-    if (this.option('common-middleware') === false) return;
-    if (typeof this.handler !== 'function') return;
-
-    this.emit('plugin', 'common-middleware', this);
+    if (!isValid(app)) return;
 
     // we'll assume none of them exist if `onStream` is not registered
     if (typeof this.onStream !== 'function') {
@@ -127,3 +124,15 @@ module.exports = function(options) {
     return plugin;
   };
 };
+
+/**
+ * Return true if `app` is a valid instance of `Base`
+ */
+
+function isValid(app) {
+  if (!app || (utils.isObject(app) && typeof app.handler !== 'function')) return;
+  if (utils.isValidApp(app,  'common-middleware', ['app', 'views', 'collection'])) {
+    debug('initializing <%s>, from <%s>', __filename, module.parent.id);
+    return true;
+  }
+}
