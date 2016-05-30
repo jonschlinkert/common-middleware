@@ -1,7 +1,7 @@
 {
   "name": "common-middleware",
   "description": "Common middleware for applications built with base-methods (like assemble, verb, generate, and update)",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "homepage": "https://github.com/jonschlinkert/common-middleware",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "repository": "jonschlinkert/common-middleware",
