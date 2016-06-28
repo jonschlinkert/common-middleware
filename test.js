@@ -90,6 +90,7 @@ describe('middleware', function() {
   });
 
   it('should allow a configName to be defined on file.json', function() {
+
     var page = app.page('name.json', {
       content: '{"name": "Halle Schlinkert"}'
     });
@@ -99,6 +100,8 @@ describe('middleware', function() {
   });
 
   it('should escape curly brace delimiters:', function(cb) {
+    app.pages.postRender(/./, middleware.unescape);
+
     var page = app.pages.getView('one.md');
     page.render({name: 'Brooke'}, function(err, res) {
       assert(!err);
@@ -108,6 +111,8 @@ describe('middleware', function() {
   });
 
   it('should escape angle bracket delimiters:', function(cb) {
+    app.pages.postRender(/./, middleware.unescape);
+
     var page = app.pages.getView('two.tmpl');
     page.render({name: 'Brooke'}, function(err, res) {
       assert(!err);
@@ -117,6 +122,8 @@ describe('middleware', function() {
   });
 
   it('should use custom file extension regex:', function(cb) {
+    app.pages.postRender(/./, middleware.unescape);
+
     var page = app.pages.getView('three.foo');
     page.render({name: 'Brooke'}, function(err, res) {
       assert(!err);

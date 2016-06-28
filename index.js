@@ -7,14 +7,13 @@
 
 'use strict';
 
-var debug = require('debug')('common-middleware');
 var utils = require('./utils');
 
 module.exports = function(options) {
   options = options || {};
 
   return function plugin(app) {
-    if (!isValid(app)) return;
+    if (!utils.isValid(app, 'common-middleware')) return;
 
     // we'll assume none of them exist if `onStream` is not registered
     if (typeof this.onStream !== 'function') {
@@ -58,21 +57,7 @@ module.exports = function(options) {
       next();
     });
 
-    this.postRender(escapeRegex, function(file, next) {
-      var str = file.contents.toString();
-      str = str.split('__BODY_TAG__').join('{% body %}');
-      str = str.replace(/__ESC_(.)DELIM__/g, '$1%=');
-      file.contents = new Buffer(str);
-      next();
-    });
-
-    this.preWrite(escapeRegex, function(file, next) {
-      var str = file.contents.toString();
-      str = str.split('__BODY_TAG__').join('{% body %}');
-      str = str.replace(/__ESC_(.)DELIM__/g, '$1%=');
-      file.contents = new Buffer(str);
-      next();
-    });
+    this.preWrite(escapeRegex, module.exports.unescape);
 
     /**
      * Adds a `json` property to the `file` object when the file extension
@@ -125,14 +110,10 @@ module.exports = function(options) {
   };
 };
 
-/**
- * Return true if `app` is a valid instance of `Base`
- */
-
-function isValid(app) {
-  if (!app || (utils.isObject(app) && typeof app.handler !== 'function')) return;
-  if (utils.isValidApp(app,  'common-middleware', ['app', 'views', 'collection'])) {
-    debug('initializing <%s>, from <%s>', __filename, module.parent.id);
-    return true;
-  }
-}
+module.exports.unescape = function(file, next) {
+  var str = file.contents.toString();
+  str = str.split('__BODY_TAG__').join('{% body %}');
+  str = str.replace(/__ESC_(.)DELIM__/g, '$1%=');
+  file.contents = new Buffer(str);
+  next();
+};

@@ -10,7 +10,7 @@ require = utils;
 
 require('define-property', 'define');
 require('isobject', 'isObject');
-require('is-valid-app');
+require('is-valid-app', 'isValid');
 require('mixin-deep', 'merge');
 require('parser-front-matter', 'matter');
 require = fn;
