@@ -52,7 +52,7 @@ module.exports = function(options) {
     this.onLoad(escapeRegex, function(file, next) {
       var str = file.contents.toString();
       str = str.split('__BODY_TAG__').join('{% body %}');
-      str = str.replace(/([{<])%%=/g, '__ESC_$1DELIM__');
+      str = str.replace(/([{<])%%=?/g, '__ESC_$1DELIM__');
       file.contents = new Buffer(str);
       next();
     });
