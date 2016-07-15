@@ -51,13 +51,12 @@ module.exports = function(options) {
 
     this.onLoad(escapeRegex, function(file, next) {
       var str = file.contents.toString();
-      str = str.split('__BODY_TAG__').join('{% body %}');
-      str = str.replace(/([{<])%%=?/g, '__ESC_$1DELIM__');
+      str = str.replace(/([{<])(%%=?)/g, '__ESC_$1DELIM$2__');
       file.contents = new Buffer(str);
       next();
     });
 
-    this.preWrite(escapeRegex, module.exports.unescape);
+    this.preWrite(escapeRegex, unescape);
 
     /**
      * Adds a `json` property to the `file` object when the file extension
@@ -110,10 +109,15 @@ module.exports = function(options) {
   };
 };
 
-module.exports.unescape = function(file, next) {
+function unescape(file, next) {
   var str = file.contents.toString();
-  str = str.split('__BODY_TAG__').join('{% body %}');
-  str = str.replace(/__ESC_(.)DELIM__/g, '$1%=');
+  str = str.replace(/__ESC_([{<])DELIM%(%=?)__/g, '$1$2');
   file.contents = new Buffer(str);
   next();
-};
+}
+
+/**
+ * Expose `unescape`
+ */
+
+module.exports.unescape = unescape;

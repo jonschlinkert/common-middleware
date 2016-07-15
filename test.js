@@ -29,7 +29,7 @@ describe('middleware', function() {
       content: 'a <%= name %> b __ESC_<DELIM__ foo %> c'
     });
     app.page('three.foo', {
-      content: 'a <%= name %> b __ESC_<DELIM__ foo %> c'
+      content: 'a <%%= name %> %> c'
     });
   });
 
@@ -90,7 +90,6 @@ describe('middleware', function() {
   });
 
   it('should allow a configName to be defined on file.json', function() {
-
     var page = app.page('name.json', {
       content: '{"name": "Halle Schlinkert"}'
     });
@@ -99,35 +98,84 @@ describe('middleware', function() {
     assert.equal(page.json.name, 'Halle Schlinkert');
   });
 
-  it('should escape curly brace delimiters:', function(cb) {
+  it('should unescape angle bracket "evaluate" delimiters:', function(cb) {
     app.pages.postRender(/./, middleware.unescape);
-
-    var page = app.pages.getView('one.md');
-    page.render({name: 'Brooke'}, function(err, res) {
-      assert(!err);
-      assert.equal(res.content, 'a Brooke b {%= foo %} c');
+    var page = app.page('one.md', {content: 'a <%%- name %> b'});
+    app.render(page, {name: 'Brooke'}, function(err, res) {
+      if (err) return cb(err);
+      assert.equal(res.content, 'a <%- name %> b');
       cb();
     });
   });
 
-  it('should escape angle bracket delimiters:', function(cb) {
+  it('should unescape angle bracket "interpolate" delimiters:', function(cb) {
     app.pages.postRender(/./, middleware.unescape);
-
-    var page = app.pages.getView('two.tmpl');
-    page.render({name: 'Brooke'}, function(err, res) {
-      assert(!err);
-      assert.equal(res.content, 'a Brooke b <%= foo %> c');
+    var page = app.page('one.md', {content: 'a <%%= name %> b'});
+    app.render(page, {name: 'Brooke'}, function(err, res) {
+      if (err) return cb(err);
+      assert.equal(res.content, 'a <%= name %> b');
       cb();
     });
   });
 
-  it('should use custom file extension regex:', function(cb) {
+  it('should unescape angle bracket "escape" delimiters:', function(cb) {
+    app.pages.postRender(/./, middleware.unescape);
+    var page = app.page('one.md', {content: 'a <%% name %> b'});
+    app.render(page, {name: 'Brooke'}, function(err, res) {
+      if (err) return cb(err);
+      assert.equal(res.content, 'a <% name %> b');
+      cb();
+    });
+  });
+
+  it('should unescape curly brace "evaluate" delimiters:', function(cb) {
+    app.pages.postRender(/./, middleware.unescape);
+    var page = app.page('one.md', {content: 'a {%%- name %} b'});
+    app.render(page, {name: 'Brooke'}, function(err, res) {
+      if (err) return cb(err);
+      assert.equal(res.content, 'a {%- name %} b');
+      cb();
+    });
+  });
+
+  it('should unescape curly brace "interpolate" delimiters:', function(cb) {
+    app.pages.postRender(/./, middleware.unescape);
+    var page = app.page('one.md', {content: 'a {%%= name %} b'});
+    app.render(page, {name: 'Brooke'}, function(err, res) {
+      if (err) return cb(err);
+      assert.equal(res.content, 'a {%= name %} b');
+      cb();
+    });
+  });
+
+  it('should unescape curly brace "escape" delimiters:', function(cb) {
+    app.pages.postRender(/./, middleware.unescape);
+    var page = app.page('one.md', {content: 'a {%% name %} b'});
+    app.render(page, {name: 'Brooke'}, function(err, res) {
+      if (err) return cb(err);
+      assert.equal(res.content, 'a {% name %} b');
+      cb();
+    });
+  });
+
+  it('should escape {% body %}:', function(cb) {
+    app.pages.postRender(/./, middleware.unescape);
+
+    var page = app.page('one.md', {content: 'foo {%% body %} bar'});
+    app.render(page, function(err, res) {
+      if (err) return cb(err);
+      assert.equal(res.content, 'foo {% body %} bar');
+      cb();
+    });
+  });
+
+  it('should not choke on partial delimiters:', function(cb) {
     app.pages.postRender(/./, middleware.unescape);
 
     var page = app.pages.getView('three.foo');
     page.render({name: 'Brooke'}, function(err, res) {
-      assert(!err);
-      assert.equal(res.content, 'a Brooke b <%= foo %> c');
+      if (err) return cb(err);
+      assert.equal(res.content, 'a <%= name %> %> c');
       cb();
     });
   });
