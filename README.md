@@ -27,30 +27,30 @@ app.use(middleware());
 
 The following middleware are included.
 
-### [front matter](index.js#L39)
+### [front matter](index.js#L41)
 
 Parses front-matter on files that match `options.extRegex` and
 adds the resulting data object to `file.data`. This object is
 passed as context to the template engine at render time.
 
-### [unescape templates](index.js#L58)
+### [unescape templates](index.js#L59)
 
 Registers a `.preWrite` middleware for unescaping escaped delimiters.
 
-### [escape templates](index.js#L108)
+### [escape templates](index.js#L124)
 
 Uses C-style macros to escape templates with `{%%= foo %}` or
 `<%= foo %>` syntax, so they will not be evaluated by a template
 engine when `.render` is called.
 
-### [JSON on-load](index.js#L146)
+### [JSON on-load](index.js#L174)
 
 Adds a `json` property to the `file` object when the file extension
 matches `options.jsonRegex`. This allows JSON files to be updated
 by other middleware or pipeline plugins without having to parse and
 stringify with each modification.
 
-### [JSON pre-write](index.js#L179)
+### [JSON pre-write](index.js#L202)
 
 If `file.contents` has not already been updated directly, the `file.contents` property
 is updated with stringified JSON before writing the file back to the file
