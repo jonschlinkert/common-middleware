@@ -17,7 +17,7 @@ function middleware(options) {
     if (!utils.isValid(app, 'common-middleware')) return;
     debug('initializing from <%s>', __filename);
 
-    // we'll assume none of them exist if `onStream` is not registered
+    // we'll assume none of the stream handlers exist if `onStream` is not registered
     if (typeof this.onStream !== 'function') {
       this.handler('onStream');
       this.handler('preWrite');
@@ -40,7 +40,6 @@ function middleware(options) {
 
     this.onLoad(extRegex, utils.mu.series([
       isHandled,
-      isNull,
       isBinary,
       utils.matter.parse,
       escape,
@@ -57,6 +56,11 @@ function middleware(options) {
      * @api public
      */
 
+    this.postRender(escapeRegex, utils.mu.series([
+      utils.matter.stringify,
+      unescape
+    ]));
+
     this.preWrite(escapeRegex, utils.mu.series([
       utils.matter.stringify,
       unescape
@@ -69,10 +73,11 @@ function middleware(options) {
 
 function isHandled(file, next) {
   file.isHandled = function(name, stage) {
+    var current = this.options.method;
     this.handled = this.handled || {};
     if (this.handled.hasOwnProperty(name)) {
       if (typeof stage !== 'string') return true;
-      if (this.handled[name].indexOf(stage) !== -1) {
+      if (this.handled[name].indexOf(stage) !== -1 && stage === current) {
         return true;
       }
     }
@@ -91,16 +96,17 @@ function isHandled(file, next) {
  */
 
 function stripPrefixes(file, next) {
-  if (file.isHandled('stripPrefixes')) {
-    next(null, file);
-    return;
-  }
-
   if (!/templates/.test(file.dirname)) {
     next(null, file);
     return;
   }
 
+  if (file.has('action.stripPrefixes')) {
+    next(null, file);
+    return;
+  }
+
+  file.set('action.stripPrefixes', true);
   file.basename = file.basename.replace(/^_/, '.');
   file.basename = file.basename.replace(/^\$/, '');
   next(null, file);
@@ -121,6 +127,12 @@ function escape(file, next) {
     return;
   }
 
+  if (file.has('action.escaped')) {
+    next(null, file);
+    return;
+  }
+
+  file.set('action.escaped', true);
   var str = file.contents.toString();
   str = str.replace(/([{<])(%%[=-]?)/g, '__ESC_$1DELIM$2__');
   file.contents = new Buffer(str);
@@ -137,6 +149,12 @@ function unescape(file, next) {
     return;
   }
 
+  if (!file.has('action.escaped')) {
+    next(null, file);
+    return;
+  }
+
+  file.set('action.escaped', false);
   var str = file.contents.toString();
   str = str.replace(/__ESC_([{<])DELIM%(%[=-]?)__/g, '$1$2');
   file.contents = new Buffer(str);
@@ -154,11 +172,6 @@ function unescape(file, next) {
  */
 
 function parseJson(file, next) {
-  if (file.extname !== '.json') {
-    next(null, file);
-    return;
-  }
-
   var str = file.contents.toString();
   utils.define(file, 'originalContent', str);
   var json;
@@ -188,19 +201,14 @@ function parseJson(file, next) {
 
 function updateJson(file, next) {
   if (file.contents.toString() !== file.originalContent) {
-    next();
+    next(null, file);
+    return;
+  }
+  if (!utils.isObject(file.json)) {
+    next(null, file);
     return;
   }
   file.contents = new Buffer(JSON.stringify(file.json, null, 2) + '\n');
-  next(null, file);
-}
-
-function isNull(file, next) {
-  if (typeof file.isNull !== 'function') {
-    file.isNull = function() {
-      return this.contents === null;
-    };
-  }
   next(null, file);
 }
 
