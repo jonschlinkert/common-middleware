@@ -7,6 +7,7 @@
 
 'use strict';
 
+var debug = require('debug')('common-middleware');
 var utils = require('./utils');
 
 function middleware(options) {
@@ -14,6 +15,7 @@ function middleware(options) {
 
   return function plugin(app) {
     if (!utils.isValid(app, 'common-middleware')) return;
+    debug('initializing from <%s>', __filename);
 
     // we'll assume none of them exist if `onStream` is not registered
     if (typeof this.onStream !== 'function') {
@@ -24,8 +26,8 @@ function middleware(options) {
 
     var opts = utils.merge({}, this.options, options);
     var jsonRegex = opts.jsonRegex || /\.(json|jshintrc)$/;
-    var escapeRegex = opts.escapeRegex || /./;
-    var extRegex = opts.extRegex || /./;
+    var escapeRegex = opts.escapeRegex || '*';
+    var extRegex = opts.extRegex || '*';
 
     /**
      * Parses front-matter on files that match `options.extRegex` and
@@ -55,7 +57,7 @@ function middleware(options) {
      * @api public
      */
 
-    this.postRender(escapeRegex, utils.mu.series([
+    this.preWrite(escapeRegex, utils.mu.series([
       utils.matter.stringify,
       unescape
     ]));
@@ -70,7 +72,9 @@ function isHandled(file, next) {
     this.handled = this.handled || {};
     if (this.handled.hasOwnProperty(name)) {
       if (typeof stage !== 'string') return true;
-      return this.handled[name].indexOf(stage) !== -1;
+      if (this.handled[name].indexOf(stage) !== -1) {
+        return true;
+      }
     }
 
     this.handled[name] = this.handled[name] || [];
@@ -206,7 +210,15 @@ function isBinary(file, next) {
       return this._isBinary;
     }
 
-    if (this.isNull() || this.isStream() || this.isDirectory()) {
+    if (typeof this.isStream === 'function' && this.isStream()) {
+      this._isBinary = false;
+      return false;
+    }
+    if (typeof this.isDirectory === 'function' && this.isDirectory()) {
+      this._isBinary = false;
+      return false;
+    }
+    if (this.isNull()) {
       this._isBinary = false;
       return false;
     }
