@@ -23,6 +23,7 @@
     "test": "mocha"
   },
   "dependencies": {
+    "debug": "^2.2.0",
     "define-property": "^0.2.5",
     "is-valid-app": "^0.2.0",
     "isbinaryfile": "^3.0.0",
