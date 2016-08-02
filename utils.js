@@ -10,9 +10,12 @@ require = utils;
 
 require('define-property', 'define');
 require('isobject', 'isObject');
+require('isbinaryfile', 'isBinary');
 require('is-valid-app', 'isValid');
 require('mixin-deep', 'merge');
 require('parser-front-matter', 'matter');
+require('middleware-rename-file', 'file');
+require('middleware-utils', 'mu');
 require = fn;
 
 /**
