@@ -172,6 +172,11 @@ function unescape(file, next) {
  */
 
 function parseJson(file, next) {
+  if (file.isNull() || file.isBinary()) {
+    next(null, file);
+    return;
+  }
+
   var str = file.contents.toString();
   utils.define(file, 'originalContent', str);
   var json;
@@ -200,6 +205,11 @@ function parseJson(file, next) {
  */
 
 function updateJson(file, next) {
+  if (file.isNull() || file.isBinary()) {
+    next(null, file);
+    return;
+  }
+
   if (file.contents.toString() !== file.originalContent) {
     next(null, file);
     return;
@@ -229,6 +239,12 @@ function isBinary(file, next) {
     if (this.isNull()) {
       this._isBinary = false;
       return false;
+    }
+
+    var exts = ['.png', '.jpg', '.pdf', '.gif'];
+    if (exts.indexOf(this.extname) !== -1) {
+      this._isBinary = true;
+      return true;
     }
 
     var len = this.stat ? this.stat.size : this.contents.length;
