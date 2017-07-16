@@ -1,6 +1,6 @@
-# common-middleware [![NPM version](https://img.shields.io/npm/v/common-middleware.svg?style=flat)](https://www.npmjs.com/package/common-middleware) [![NPM downloads](https://img.shields.io/npm/dm/common-middleware.svg?style=flat)](https://npmjs.org/package/common-middleware) [![Build Status](https://img.shields.io/travis/jonschlinkert/common-middleware.svg?style=flat)](https://travis-ci.org/jonschlinkert/common-middleware)
+# common-middleware [![NPM version](https://img.shields.io/npm/v/common-middleware.svg?style=flat)](https://www.npmjs.com/package/common-middleware) [![NPM monthly downloads](https://img.shields.io/npm/dm/common-middleware.svg?style=flat)](https://npmjs.org/package/common-middleware) [![NPM total downloads](https://img.shields.io/npm/dt/common-middleware.svg?style=flat)](https://npmjs.org/package/common-middleware) [![Linux Build Status](https://img.shields.io/travis/jonschlinkert/common-middleware.svg?style=flat&label=Travis)](https://travis-ci.org/jonschlinkert/common-middleware)
 
-Common middleware for applications built with base-methods (like assemble, verb, generate, and update)
+> Common middleware for applications built with base-methods (like assemble, verb, generate, and update)
 
 ## Install
 
@@ -27,30 +27,30 @@ app.use(middleware());
 
 The following middleware are included.
 
-### [front matter](index.js#L41)
+### [front matter](index.js#L48)
 
 Parses front-matter on files that match `options.extRegex` and
 adds the resulting data object to `file.data`. This object is
 passed as context to the template engine at render time.
 
-### [unescape templates](index.js#L59)
+### [unescape templates](index.js#L65)
 
 Registers a `.preWrite` middleware for unescaping escaped delimiters.
 
-### [escape templates](index.js#L124)
+### [escape templates](index.js#L135)
 
 Uses C-style macros to escape templates with `{%%= foo %}` or
 `<%= foo %>` syntax, so they will not be evaluated by a template
 engine when `.render` is called.
 
-### [JSON on-load](index.js#L174)
+### [JSON on-load](index.js#L181)
 
 Adds a `json` property to the `file` object when the file extension
 matches `options.jsonRegex`. This allows JSON files to be updated
 by other middleware or pipeline plugins without having to parse and
 stringify with each modification.
 
-### [JSON pre-write](index.js#L202)
+### [JSON pre-write](index.js#L214)
 
 If `file.contents` has not already been updated directly, the `file.contents` property
 is updated with stringified JSON before writing the file back to the file
@@ -93,7 +93,7 @@ app.use(middleware({jsonRegex: /\.(tmpl|hbs)$/}));
 ### Related projects
 
 * [assemble-core](https://www.npmjs.com/package/assemble-core): The core assemble application with no presets or defaults. All configuration is left to the… [more](https://github.com/assemble/assemble-core) | [homepage](https://github.com/assemble/assemble-core "The core assemble application with no presets or defaults. All configuration is left to the implementor.")
-* [base](https://www.npmjs.com/package/base): base is the foundation for creating modular, unit testable and highly pluggable node.js applications, starting… [more](https://github.com/node-base/base) | [homepage](https://github.com/node-base/base "base is the foundation for creating modular, unit testable and highly pluggable node.js applications, starting with a handful of common methods, like `set`, `get`, `del` and `use`.")
+* [base](https://www.npmjs.com/package/base): Framework for rapidly creating high quality node.js applications, using plugins like building blocks | [homepage](https://github.com/node-base/base "Framework for rapidly creating high quality node.js applications, using plugins like building blocks")
 * [generate](https://www.npmjs.com/package/generate): Command line tool and developer framework for scaffolding out new GitHub projects. Generate offers the… [more](https://github.com/generate/generate) | [homepage](https://github.com/generate/generate "Command line tool and developer framework for scaffolding out new GitHub projects. Generate offers the robustness and configurability of Yeoman, the expressiveness and simplicity of Slush, and more powerful flow control and composability than either.")
 * [update](https://www.npmjs.com/package/update): Be scalable! Update is a new, open source developer framework and CLI for automating updates… [more](https://github.com/update/update) | [homepage](https://github.com/update/update "Be scalable! Update is a new, open source developer framework and CLI for automating updates of any kind in code projects.")
 * [verb](https://www.npmjs.com/package/verb): Documentation generator for GitHub projects. Verb is extremely powerful, easy to use, and is used… [more](https://github.com/verbose/verb) | [homepage](https://github.com/verbose/verb "Documentation generator for GitHub projects. Verb is extremely powerful, easy to use, and is used on hundreds of projects of all sizes to generate everything from API docs to readmes.")
@@ -104,20 +104,20 @@ Pull requests and stars are always welcome. For bugs and feature requests, [plea
 
 ### Building docs
 
-_(This document was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme) (a [verb](https://github.com/verbose/verb) generator), please don't edit the readme directly. Any changes to the readme must be made in [.verb.md](.verb.md).)_
+_(This project's readme.md is generated by [verb](https://github.com/verbose/verb-generate-readme), please don't edit the readme directly. Any changes to the readme must be made in the [.verb.md](.verb.md) readme template.)_
 
-To generate the readme and API documentation with [verb](https://github.com/verbose/verb):
+To generate the readme, run the following command:
 
 ```sh
-$ npm install -g verb verb-generate-readme && verb
+$ npm install -g verbose/verb#dev verb-generate-readme && verb
 ```
 
 ### Running tests
 
-Install dev dependencies:
+Running and reviewing unit tests is a great way to get familiarized with a library and its API. You can install dependencies and run tests with the following command:
 
 ```sh
-$ npm install -d && npm test
+$ npm install && npm test
 ```
 
 ### Author
@@ -125,13 +125,13 @@ $ npm install -d && npm test
 **Jon Schlinkert**
 
 * [github/jonschlinkert](https://github.com/jonschlinkert)
-* [twitter/jonschlinkert](http://twitter.com/jonschlinkert)
+* [twitter/jonschlinkert](https://twitter.com/jonschlinkert)
 
 ### License
 
-Copyright © 2016, [Jon Schlinkert](https://github.com/jonschlinkert).
-Released under the [MIT license](https://github.com/jonschlinkert/common-middleware/blob/master/LICENSE).
+Copyright © 2017, [Jon Schlinkert](https://github.com/jonschlinkert).
+Released under the [MIT License](LICENSE).
 
 ***
 
-_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.1.28, on August 02, 2016._
+_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.6.0, on July 16, 2017._
