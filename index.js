@@ -1,21 +1,29 @@
 /*!
  * common-middleware <https://github.com/jonschlinkert/common-middleware>
  *
- * Copyright (c) 2015, Jon Schlinkert.
- * Licensed under the MIT License.
+ * Copyright (c) 2015-2017, Jon Schlinkert.
+ * Released under the MIT License.
  */
 
 'use strict';
 
 var debug = require('debug')('common-middleware');
-var utils = require('./utils');
+var define = require('define-property');
+var isObject = require('isobject');
+var isBinary = require('file-is-binary');
+var isValid = require('is-valid-app');
+var merge = require('mixin-deep');
+var matter = require('parser-front-matter');
+var renameFile = require('middleware-rename-file');
+var utils = require('middleware-utils');
 
 function middleware(options) {
   options = options || {};
 
   return function plugin(app) {
-    if (!utils.isValid(app, 'common-middleware')) return;
+    if (!isValid(app, 'common-middleware')) return;
     debug('initializing from <%s>', __filename);
+    var opts = merge({}, this.options, options);
 
     // we'll assume none of the stream handlers exist if `onStream` is not registered
     if (typeof this.onStream !== 'function') {
@@ -24,10 +32,9 @@ function middleware(options) {
       this.handler('postWrite');
     }
 
-    var opts = utils.merge({}, this.options, options);
     var jsonRegex = opts.jsonRegex || /\.(json|jshintrc)$/;
-    var escapeRegex = opts.escapeRegex || '*';
-    var extRegex = opts.extRegex || '*';
+    var escapeRegex = opts.escapeRegex || /./;
+    var extRegex = opts.extRegex || /./;
 
     /**
      * Parses front-matter on files that match `options.extRegex` and
@@ -38,13 +45,12 @@ function middleware(options) {
      * @api public
      */
 
-    this.onLoad(extRegex, utils.mu.series([
+    this.onLoad(extRegex, utils.series([
       isHandled,
-      isBinary,
-      utils.matter.parse,
+      matter.parse,
       escape,
       stripPrefixes,
-      utils.file.renameFile(this)
+      renameFile()
     ]));
 
     this.onLoad(jsonRegex, parseJson);
@@ -56,13 +62,13 @@ function middleware(options) {
      * @api public
      */
 
-    this.postRender(escapeRegex, utils.mu.series([
-      utils.matter.stringify,
+    this.postRender(escapeRegex, utils.series([
+      matter.stringify,
       unescape
     ]));
 
-    this.preWrite(escapeRegex, utils.mu.series([
-      utils.matter.stringify,
+    this.preWrite(escapeRegex, utils.series([
+      matter.stringify,
       unescape
     ]));
 
@@ -96,6 +102,11 @@ function isHandled(file, next) {
  */
 
 function stripPrefixes(file, next) {
+  if (file.isDirectory()) {
+    next(null, file);
+    return;
+  }
+
   if (!/templates/.test(file.dirname)) {
     next(null, file);
     return;
@@ -122,7 +133,7 @@ function stripPrefixes(file, next) {
  */
 
 function escape(file, next) {
-  if (file.isNull() || file.isBinary()) {
+  if (file.isNull() || file.isDirectory() || isBinary(file)) {
     next(null, file);
     return;
   }
@@ -133,9 +144,7 @@ function escape(file, next) {
   }
 
   file.set('action.escaped', true);
-  var str = file.contents.toString();
-  str = str.replace(/([{<])(%%[=-]?)/g, '__ESC_$1DELIM$2__');
-  file.contents = new Buffer(str);
+  file.content = file.content.replace(/([{<])(%%[=-]?)/g, '__ESC_$1DELIM$2__');
   next(null, file);
 }
 
@@ -144,7 +153,7 @@ function escape(file, next) {
  */
 
 function unescape(file, next) {
-  if (file.isNull() || file.isBinary()) {
+  if (file.isNull() || file.isDirectory() || isBinary(file)) {
     next(null, file);
     return;
   }
@@ -155,9 +164,7 @@ function unescape(file, next) {
   }
 
   file.set('action.escaped', false);
-  var str = file.contents.toString();
-  str = str.replace(/__ESC_([{<])DELIM%(%[=-]?)__/g, '$1$2');
-  file.contents = new Buffer(str);
+  file.content = file.content.replace(/__ESC_([{<])DELIM%(%[=-]?)__/g, '$1$2');
   next();
 }
 
@@ -172,13 +179,13 @@ function unescape(file, next) {
  */
 
 function parseJson(file, next) {
-  if (file.isNull() || file.isBinary()) {
+  if (file.isNull() || file.isDirectory() || isBinary(file)) {
     next(null, file);
     return;
   }
 
   var str = file.contents.toString();
-  utils.define(file, 'originalContent', str);
+  define(file, 'originalContent', str);
   var json;
 
   Object.defineProperty(file, 'json', {
@@ -205,7 +212,7 @@ function parseJson(file, next) {
  */
 
 function updateJson(file, next) {
-  if (file.isNull() || file.isBinary()) {
+  if (file.isNull() || file.isDirectory() || isBinary(file)) {
     next(null, file);
     return;
   }
@@ -214,43 +221,11 @@ function updateJson(file, next) {
     next(null, file);
     return;
   }
-  if (!utils.isObject(file.json)) {
+  if (!isObject(file.json)) {
     next(null, file);
     return;
   }
   file.contents = new Buffer(JSON.stringify(file.json, null, 2) + '\n');
-  next(null, file);
-}
-
-function isBinary(file, next) {
-  file.isBinary = function() {
-    if (this.hasOwnProperty('_isBinary')) {
-      return this._isBinary;
-    }
-
-    if (typeof this.isStream === 'function' && this.isStream()) {
-      this._isBinary = false;
-      return false;
-    }
-    if (typeof this.isDirectory === 'function' && this.isDirectory()) {
-      this._isBinary = false;
-      return false;
-    }
-    if (this.isNull()) {
-      this._isBinary = false;
-      return false;
-    }
-
-    var exts = ['.png', '.jpg', '.pdf', '.gif'];
-    if (exts.indexOf(this.extname) !== -1) {
-      this._isBinary = true;
-      return true;
-    }
-
-    var len = this.stat ? this.stat.size : this.contents.length;
-    this._isBinary = utils.isBinary.sync(this.contents, len);
-    return this._isBinary;
-  };
   next(null, file);
 }
 

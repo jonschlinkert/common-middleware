@@ -220,9 +220,7 @@ describe('json config', function() {
     var pkg = require('./package.json');
     pkg.fake = {};
 
-    var page = app.page('package.json', {
-      content: JSON.stringify(pkg)
-    });
+    var page = app.page('package.json', {content: JSON.stringify(pkg)});
 
     assert(page.json.fake);
     assert.equal(typeof page.json.fake, 'object');
