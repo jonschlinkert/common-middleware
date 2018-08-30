@@ -20,6 +20,7 @@
     "test": "mocha"
   },
   "dependencies": {
+    "ansi-colors": "^3.0.5",
     "debug": "^2.6.8",
     "define-property": "^1.0.0",
     "file-is-binary": "^1.0.0",
