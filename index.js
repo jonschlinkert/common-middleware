@@ -16,6 +16,7 @@ var merge = require('mixin-deep');
 var matter = require('parser-front-matter');
 var renameFile = require('middleware-rename-file');
 var utils = require('middleware-utils');
+var c = require('ansi-colors')
 
 function middleware(options) {
   options = options || {};
@@ -102,6 +103,12 @@ function isHandled(file, next) {
  */
 
 function stripPrefixes(file, next) {
+  if (!file.prototype) {
+    console.log(c.yellow('WARNING: File seems not a Vinyl object'), file)
+    next(null, file)
+    return
+  }
+
   if (file.isDirectory()) {
     next(null, file);
     return;
